@@ -27,9 +27,11 @@ $(document).ready(() => {
     var firstTime = $("#firstTime-input").val().trim();
     var frequency = $("#frequency-input").val().trim();
 
-    var trainData = [trainName, destination, firstTime, frequency];
-    console.log(trainData);
+ 
 
+    var trainsData = [];
+
+    
     // clear form inputs upon submission
     $("#trainName-input").val("");
     $("#destination-input").val("");
@@ -45,24 +47,26 @@ $(document).ready(() => {
 
     var remainingTime = minDiff % frequency;
 
+
     // min until next train
     var timeToNext = frequency - remainingTime;
     console.log(timeToNext + "mins untill next train");
   
-    //change firebase save data
-    database.ref().on("value", function(snapshot) {
-  
-      //print initial data value to console
-      console.log(snapshot.val());
-  
-      //log value of various properties
-      console.log(snapshot.val().trainName);
-      console.log(snapshot.val().destination);
-      console.log(snapshot.val().firstTime);
-      console.log(snapshot.val().frequency);
-      
-      //Change the HTML
-      $("#train").text(snapshot.val().trainName)
-    })
-  })
+    // next train time
+    var nextTrainTime = moment().add(timeToNext, "min");
+
+    var train = {
+      "Name": trainName, 
+      "Destination": destination,
+      "First Train": firstTime,
+      "Frequency": frequency,
+      "Next Train Time": moment(nextTrainTime).format("HH:mm"),
+      "Train arriving in": timeToNext
+    };
+    console.log(train);
+    trainsData.push(train);
+    console.log(trainData);
+  });
+// end submit button function
+
 })
