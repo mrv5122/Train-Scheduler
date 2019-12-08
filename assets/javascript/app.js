@@ -1,37 +1,38 @@
-var firebaseConfig = {
-    apiKey: "AIzaSyCJTQSTWaDoMAFi-In5J5CjMidO1tskzpI",
-    authDomain: "happy-hour-d3a31.firebaseapp.com",
-    databaseURL: "https://happy-hour-d3a31.firebaseio.com",
-    projectId: "happy-hour-d3a31",
-    storageBucket: "",
-    messagingSenderId: "629203832179",
-    appId: "1:629203832179:web:5cc02d69ade2014ff44906"
-  };
+var config = {
+  apiKey: "AIzaSyCJTQSTWaDoMAFi-In5J5CjMidO1tskzpI",
+  authDomain: "happy-hour-d3a31.firebaseapp.com",
+  databaseURL: "https://happy-hour-d3a31.firebaseio.com",
+  projectId: "happy-hour-d3a31",
+  storageBucket: "happy-hour-d3a31.appspot.com",
+  messagingSenderId: "629203832179",
+  appId: "1:629203832179:web:5cc02d69ade2014ff44906"
+};
 
 firebase.initializeApp(config);
 
 var database = firebase.database();
-
-var trainInfo = databse.ref("/trains");
+var trainInfo = database.ref("/trains");
 console.log(trainInfo);
 
-$(document).ready(() => {
+$(document).ready(function() {
   $("#submit-button").on("click", event => {
-
     //prevent page refresh, inputs from being auto submitted
     event.preventDefault();
-  
+
     //getting user inputs
-    var trainName = $("#trainName-input").val().trim();
-    var destination = $("#destination-input").val().trim();
-    var firstTime = $("#firstTime-input").val().trim();
-    var frequency = $("#frequency-input").val().trim();
+    var trainNameIn = $("#trainName-input")
+      .val()
+      .trim();
+    var destinationIn = $("#destination-input")
+      .val()
+      .trim();
+    var firstTimeIn = $("#firstTime-input")
+      .val()
+      .trim();
+    var frequencyIn = $("#frequency-input")
+      .val()
+      .trim();
 
- 
-
-    var trainsData = [];
-
-    
     // clear form inputs upon submission
     $("#trainName-input").val("");
     $("#destination-input").val("");
@@ -39,34 +40,73 @@ $(document).ready(() => {
     $("#frequency-input").val("");
 
     // calculate time difference
-    var timeCalculator = moment(firstTime, "HH:mm").subtract(1, "days");
+    var timeCalculator = moment(firstTimeIn, "HH:mm").subtract(1, "days");
     console.log(timeCalculator);
 
     var minDiff = moment().diff(timeCalculator, "minutes");
     console.log(minDiff + "minutes since first train");
 
-    var remainingTime = minDiff % frequency;
-
+    var remainingTime = minDiff % frequencyIn;
 
     // min until next train
-    var timeToNext = frequency - remainingTime;
+    var timeToNext = frequencyIn - remainingTime;
     console.log(timeToNext + "mins untill next train");
-  
+
     // next train time
-    var nextTrainTime = moment().add(timeToNext, "min");
+    var nextTrainTimeInp = moment().add(timeToNext, "min");
 
-    var train = {
-      "Name": trainName, 
-      "Destination": destination,
-      "First Train": firstTime,
-      "Frequency": frequency,
-      "Next Train Time": moment(nextTrainTime).format("HH:mm"),
-      "Train arriving in": timeToNext
+    var trainObject = {
+      trainName: trainNameIn,
+      destination: destinationIn,
+      firstTime: firstTimeIn,
+      frequency: frequencyIn,
+      nextTrainTime: moment(nextTrainTimeInp).format("HH:mm"),
+      trainArrivesIn: timeToNext
     };
-    console.log(train);
-    trainsData.push(train);
-    console.log(trainData);
-  });
-// end submit button function
+    console.log(trainObject);
 
-})
+    trainInfo.push(trainObject);
+
+    console.log(trainInfo);
+  }); // end submit button functionality
+
+  // update next train arrival & next train time data
+  dataUpdater = () => {
+    $("#train-info").html("");
+
+    trainInfo.on("child_added", snapshot => {
+      var newTrainRow;
+      var trainName = snapshot.val().trainName;
+      var dest = snapshot.val().destination;
+      var firstTrainTime = snapshot.val().firstTime;
+      var freq = snapshot.val().frequency;
+      var nextTrainTime = snapshot.val().nextTrainTime;
+      var trainArrivesIn = snapshot.val().trainArrivesIn;
+
+      console.log(trainName,dest, firstTrainTime, freq, nextTrainTime, trainArrivesIn);
+
+      newTrainRow = $("<tr>").append(
+        $("<td>").text(trainName),
+        $("<td>").text(dest),
+        $("<td>").text(firstTrainTime),
+        $("<td>").text(freq + "mins"),
+        $("<td>").text(nextTrainTime),
+        $("<td>").text(trainArrivesIn + "mins")
+      );
+
+      $("#train-info").append(newTrainRow);
+    });
+  } // end data updater
+
+    // show current time on screen
+    currTimeUpd = () => {
+      var thisTime = moment().format("HH:mm:ss");
+      $(".timeNow").text(thisTime);
+    }
+
+    currTimeUpd();
+    dataUpdater();
+    setInterval(currTimeUpd, 1000);
+    setInterval(dataUpdater, 1000);
+
+});
