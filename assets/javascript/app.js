@@ -12,7 +12,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 var database = firebase.database();
-var trainInfo = database.ref("/");
+var trainInfo = database.ref("/trains");
 console.log(trainInfo);
 
 $(document).ready(function() {
@@ -84,7 +84,7 @@ $(document).ready(function() {
       var nextTrainTime = snapshot.val().nextTrainTime;
       var trainArrivesIn = snapshot.val().trainArrivesIn;
 
-      console.log(trainName,dest, firstTrainTime, freq, nextTrainTime, trainArrivesIn);
+      console.log(trainName, dest, firstTrainTime, freq, nextTrainTime, trainArrivesIn);
 
       newTrainRow = $("<tr>").append(
         $("<td>").text(trainName),
@@ -96,6 +96,10 @@ $(document).ready(function() {
       );
 
       $("#train-info").append(newTrainRow);
+
+      //update timestamps
+
+    
     });
   } // end data updater
 
