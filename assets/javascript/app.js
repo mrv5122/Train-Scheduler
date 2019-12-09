@@ -40,53 +40,61 @@ $(document).ready(function() {
     $("#firstTime-input").val("");
     $("#frequency-input").val("");
 
+
+    // time stuff
+    var timeConverter = moment(firstTimeIn, "HH:mm").subtract(1, "days");
+
+    console.log(timeConverter);
+
+    var minuteDiff = moment().diff(timeConverter, "minutes");
+    console.log("Minutes difference to first train: " + minuteDiff);
+
+    var timeRemaining = minuteDiff % frequencyIn;
+
+    // Minutes until train
+    var timeToNext = frequencyIn - timeRemaining;
+    console.log("How many minutes left before next train: " + timeToNext);
+
+    //Time of next train
+    var nextTrainTimeInput = moment().add(timeToNext, "minutes");
+
+
     var trainObject = {
       trainName: trainNameIn,
       destination: destinationIn,
       firstTime: firstTimeIn,
       frequency: frequencyIn,
+      nextTrainTime: moment(nextTrainTimeInput).format("hh:mm"),
+      trainArrivesInMin: timeToNext
     };
     console.log(trainObject);
 
-    trainInfo.push(trainObject);
+database.ref().push(trainObject);
 
     console.log(trainInfo);
   }); // end submit button functionality
 
   // update next train arrival & next train time data
-  dataUpdater = () => {
     $("#train-info").html("");
-    trainInfo.on("child_added", snapshot => {
+database.ref().on("child_added", snapshot => {
+
       var newTrainRow;
 
-      var trainName = snapshot.val().trainName;
-      var trainDest = snapshot.val().destination;
-      var firstTrain = snapshot.val().firstTime;
-      var trainFreq = snapshot.val().frequency;
+    var trainName = snapshot.val().trainName;
+    var trainDest = snapshot.val().destination;
+    var firstTrain = snapshot.val().firstTime;
+    var trainFreq = snapshot.val().frequency;
+    var nextTrainTime = snapshot.val().nextTrainTime;
+    var trainArrivesIn = snapshot.val().trainArrivesInMin;
 
-      var firstTime = moment(firstTrain, "HH:MM").subtract(1, "years");
-      console.log(firstTime);
   
-      var timeDifference = moment().diff(moment(firstTime), "minutes");
-
-      var timeRemaining =  timeDifference % trainFreq;
-      console.log(timeRemaining);
-  
-      var timeUntillNext = trainFreq - timeRemaining;
-      console.log(timeUntillNext);
-  
-      var nextTrainTime = moment().add(timeUntillNext, "minutes");
-      console.log(nextTrainTime);
-  
-
-      console.log(trainName, trainDest, firstTrain, trainFreq, nextTrainTime, timeUntillNext);
-
       newTrainRow = $("<tr>").append(
         $("<td>").text(trainName),
         $("<td>").text(trainDest),
         $("<td>").text(firstTrain),
-        $("<td>").text(trainFreq),
-        $("<td>").text(moment(nextTrainTime).format("HH:mm")),
+        $("<td>").text(trainFreq + " mins"),
+        $("<td>").text(nextTrainTime),
+        $("<td>").text(trainArrivesIn + " minutes")
       );
 
       $("#train-info").append(newTrainRow);
@@ -95,7 +103,6 @@ $(document).ready(function() {
 
     
     });
-  } // end data updater
 
     // show current time on screen
     currTimeUpd = () => {
@@ -103,7 +110,6 @@ $(document).ready(function() {
       $(".timeNow").text(thisTime);
     }
     currTimeUpd();
+  
     setInterval(currTimeUpd, 1000);
-    setInterval(dataUpdater, 1000);
-
 });
